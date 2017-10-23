@@ -60,3 +60,26 @@ class Kraken:
     return currentPrice
 
 
+class Bitstamp:
+  currencyPairs = ["btcusd", "btceur", "eurusd", "xrpusd", "xrpeur", "xrpbtc", "ltcusd", "ltceur", "ltcbtc", "ethusd", "etheur", "ethbtc"]
+
+  def getJson(self,url):
+    """
+    Gets the json at the url location and returns a json object
+    """
+    r = req.get(str(url),"GET")
+    jsonResponse = json.loads(r.text)
+    return jsonResponse
+
+  def getCurrentPrice(self,ticker):
+    """
+    Gets the current price of a traded currency pair on Kraken
+    """
+    uri = "https://www.bitstamp.net/api/v2/ticker/"
+    requestUrl = uri + ticker
+    jsonResponse = self.getJson(requestUrl)
+    currentPrice = jsonResponse["last"]
+    return currentPrice
+
+
+
