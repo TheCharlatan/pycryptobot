@@ -6,6 +6,7 @@ class Exchange:
     self.allPairs = []
     self.availableTickers = []
     self.pairsByTicker = {} 
+
   def getJson(self,url):
     """
     Gets the json at the url location and returns a json object
@@ -117,4 +118,53 @@ class Bitstamp(Exchange):
     jsonResponse = self.getJson(requestUrl)
     currentPrice = jsonResponse["last"]
     return currentPrice
+
+
+class Bitfinex(Exchange):
+  def __init__(self):
+    self.allPairs = self.getJson("https://api.bitfinex.com/v1/symbols")
+    self.availableTickers = self.formatTickers()
+    self.pairsByTicker = self.orderPairs()
+
+  def formatTickers(self):
+    """
+    Format ticker to uppercase and unique symbols for every traded asset
+    """
+    availableTickers = []
+    for pair in self.allPairs:
+      if not pair.upper()[0:3] in availableTickers:
+        availableTickers.append(pair.upper()[0:3])
+      if not pair.upper()[3:] in availableTickers:
+        availableTickers.append(pair.upper()[3:])
+    return availableTickers
+
+  def orderPairs(self):
+    """
+    Order Pairs by Common Ticker into a dict
+    """
+    pairsByTickers = {}
+    for asset in self.availableTickers:
+      holder = []
+      for pair in self.allPairs:
+        if asset.lower() in pair:
+          holder.append(pair.upper())
+        pairsByTickers[asset] = holder
+    return pairsByTickers
+
+  def getCurrentPrice(self,primary,secondary):
+    """
+    Gets the current price of a traded currency pair on Kraken
+    """
+    pair = self.getTradedPair(primary,secondary)
+    uri = "https://www.bitfinex.com/v2/ticker/t"
+    requestUrl = uri + pair
+    jsonResponse = self.getJson(requestUrl)
+    currentPrice = jsonResponse[0]
+    return currentPrice
+
+
+
+
+
+
 
