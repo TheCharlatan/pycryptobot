@@ -162,8 +162,115 @@ class Bitfinex(Exchange):
     currentPrice = jsonResponse[0]
     return currentPrice
 
+class Poloniex(Exchange):
+  def __init__(self):
+    self.allPairs = self.getPairs()
+    self.availableTickers = self.getTradedTickers()
+    self.pairsByTicker = self.orderPairs()
 
+  def getPairs(self):
+    """
+    Returns traded Currency Pairs on Kraken
+    """
+    jsonResponse = self.getJson("https://poloniex.com/public?command=returnTicker")
+    allPairs = []
+    for i in jsonResponse:
+      allPairs.append(i)
+    return allPairs
 
+  def getTradedTickers(self):
+    """
+    Returns traded Tickers on Kraken
+    """
+    availableTickers = []
+    for i in self.allPairs:
+      i,j = i.split("_")
+      if not i in availableTickers:
+        availableTickers.append(i)
+      if not j in availableTickers:
+        availableTickers.append(j)
+    return availableTickers
+
+  def orderPairs(self):
+    """
+    Order Pairs by Common Ticker into a dict
+    """
+    pairsByTickers = {}
+    for asset in self.availableTickers:
+      if asset[0]=="X" or asset[0]=="Z":
+        asset = asset[1:]
+      holder = []
+      for pair in self.allPairs:
+        if asset in pair:
+          holder.append(pair)
+      if asset == "XBT":
+        asset = "BTC"
+      pairsByTickers[asset] = holder
+    return pairsByTickers
+
+  def getCurrentPrice(self,primary,secondary):
+    """
+    Gets the current price of a traded currency pair on Kraken
+    """
+    pair = self.getTradedPair(primary,secondary)
+    jsonResponse = self.getJson("https://poloniex.com/public?command=returnTicker")
+    currentPrice = jsonResponse[pair]["last"]
+    return currentPrice
+
+class Bittrex(Exchange):
+  def __init__(self):
+    self.allPairs = self.getPairs()
+    self.availableTickers = self.getTradedTickers()
+    self.pairsByTicker = self.orderPairs()
+
+  def getPairs(self):
+    """
+    Returns traded Currency Pairs on Kraken
+    """
+    jsonResponse = self.getJson("https://poloniex.com/public?command=returnTicker")
+    allPairs = []
+    for i in jsonResponse:
+      allPairs.append(i)
+    return allPairs
+
+  def getTradedTickers(self):
+    """
+    Returns traded Tickers on Kraken
+    """
+    availableTickers = []
+    for i in self.allPairs:
+      i,j = i.split("_")
+      if not i in availableTickers:
+        availableTickers.append(i)
+      if not j in availableTickers:
+        availableTickers.append(j)
+    return availableTickers
+
+  def orderPairs(self):
+    """
+    Order Pairs by Common Ticker into a dict
+    """
+    pairsByTickers = {}
+    for asset in self.availableTickers:
+      if asset[0]=="X" or asset[0]=="Z":
+        asset = asset[1:]
+      holder = []
+      for pair in self.allPairs:
+        if asset in pair:
+          holder.append(pair)
+      if asset == "XBT":
+        asset = "BTC"
+      pairsByTickers[asset] = holder
+    return pairsByTickers
+
+  def getCurrentPrice(self,primary,secondary):
+    """
+    Gets the current price of a traded currency pair on Kraken
+    """
+    pair = self.getTradedPair(primary,secondary)
+    jsonResponse = self.getJson("https://poloniex.com/public?command=returnTicker")
+    currentPrice = jsonResponse[pair]["last"]
+    return currentPrice
 
 
 
