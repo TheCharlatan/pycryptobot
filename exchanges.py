@@ -1,12 +1,12 @@
 import json as json
 import requests as req
 
-
 class Kraken:
   def __init__(self):
     self.allPairs = self.getPairs()
     self.allAssets = self.getTradedAssets()
     self.pairsByAssets = self.orderPairs()
+    self.translateList = self.mapTicker()
 
   def getJson(self,url):
     """
@@ -48,6 +48,19 @@ class Kraken:
           holder.append(pair)
         pairsByAssets[asset] = holder
     return pairsByAssets
+
+  def mapTicker(self):
+    """
+    Map general ticker names to Kraken generic names
+    """
+    translatedTicker={}
+    for name in self.allAssets:
+      print(name, name[1:])
+      if name[0]=="X" or name[0]=="Z":
+         translatedTicker[name] = name[1:]
+      else:
+        translatedTicker[name] = name
+    print(translatedTicker)      
 
   def getCurrentPrice(self,ticker):
     """
