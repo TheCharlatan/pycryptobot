@@ -1,13 +1,11 @@
 import json as json
 import requests as req
 
-
-class Kraken:
+class Exchange:
   def __init__(self):
-    self.allPairs = self.getPairs()
-    self.availableTickers = self.getTradedTickers()
-    self.pairsByTicker = self.orderPairs()
-
+    self.allPairs = []
+    self.availableTickers = []
+    self.pairsByTicker = {} 
   def getJson(self,url):
     """
     Gets the json at the url location and returns a json object
@@ -15,6 +13,19 @@ class Kraken:
     r = req.get(str(url),"GET")
     jsonResponse = json.loads(r.text)
     return jsonResponse
+
+  def getTradedPair(self,primary,secondary):
+    for i in self.pairsByTicker[primary]:
+      for j in self.pairsByTicker[secondary]:
+        if i == j:
+          return i
+
+
+class Kraken(Exchange):
+  def __init__(self):
+    self.allPairs = self.getPairs()
+    self.availableTickers = self.getTradedTickers()
+    self.pairsByTicker = self.orderPairs()
 
   def getPairs(self):
     """
@@ -53,12 +64,6 @@ class Kraken:
       pairsByTickers[asset] = holder
     return pairsByTickers
 
-  def getTradedPair(self,primary,secondary):
-    for i in self.pairsByTicker[primary]:
-      for j in self.pairsByTicker[secondary]:
-        if i == j:
-          return i
-
   def getCurrentPrice(self,primary,secondary):
     """
     Gets the current price of a traded currency pair on Kraken
@@ -71,7 +76,7 @@ class Kraken:
     return currentPrice
 
 
-class Bitstamp:
+class Bitstamp(Exchange):
   def __init__(self):
     self.allPairs = ["btcusd", "btceur", "eurusd", "xrpusd", "xrpeur", "xrpbtc", "ltcusd", "ltceur", "ltcbtc", "ethusd", "etheur", "ethbtc"]
     self.availableTickers = self.formatTickers()
@@ -89,14 +94,6 @@ class Bitstamp:
         availableTickers.append(pair.upper()[3:])
     return availableTickers
 
-  def getJson(self,url):
-    """
-    Gets the json at the url location and returns a json object
-    """
-    r = req.get(str(url),"GET")
-    jsonResponse = json.loads(r.text)
-    return jsonResponse
-
   def orderPairs(self):
     """
     Order Pairs by Common Ticker into a dict
@@ -105,16 +102,10 @@ class Bitstamp:
     for asset in self.availableTickers:
       holder = []
       for pair in self.allPairs:
-        if asset.lower()[0:3] in pair or asset.lower()[3:] in pair:
+        if asset.lower() in pair:
           holder.append(pair)
         pairsByTickers[asset] = holder
     return pairsByTickers
-
-  def getTradedPair(self,primary,secondary):
-    for i in self.pairsByTicker[primary]:
-      for j in self.pairsByTicker[secondary]:
-        if i == j:
-          return i
 
   def getCurrentPrice(self,primary,secondary):
     """
