@@ -5,7 +5,7 @@ class Exchange:
   def __init__(self):
     self.allPairs = []
     self.availableTickers = []
-    self.pairsByTicker = {} 
+    self.pairsByTicker = {}
 
   def getJson(self,url):
     """
@@ -227,10 +227,10 @@ class Bittrex(Exchange):
     """
     Returns traded Currency Pairs on Kraken
     """
-    jsonResponse = self.getJson("https://poloniex.com/public?command=returnTicker")
+    jsonResponse = self.getJson("https://bittrex.com/api/v1.1/public/getmarkets")
     allPairs = []
-    for i in jsonResponse:
-      allPairs.append(i)
+    for i in jsonResponse["result"]:
+      allPairs.append(i["MarketName"])
     return allPairs
 
   def getTradedTickers(self):
@@ -239,7 +239,7 @@ class Bittrex(Exchange):
     """
     availableTickers = []
     for i in self.allPairs:
-      i,j = i.split("_")
+      i,j = i.split("-")
       if not i in availableTickers:
         availableTickers.append(i)
       if not j in availableTickers:
@@ -268,8 +268,9 @@ class Bittrex(Exchange):
     Gets the current price of a traded currency pair on Kraken
     """
     pair = self.getTradedPair(primary,secondary)
-    jsonResponse = self.getJson("https://poloniex.com/public?command=returnTicker")
-    currentPrice = jsonResponse[pair]["last"]
+    uri = "https://bittrex.com/api/v1.1/public/getticker?market="+pair
+    jsonResponse = self.getJson(uri)
+    currentPrice = jsonResponse["result"]["Last"]
     return currentPrice
 
 
