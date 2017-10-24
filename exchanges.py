@@ -3,8 +3,11 @@ import requests as req
 
 class Exchange:
   def __init__(self):
+    #List of raw currency ticker pairs
     self.allPairs = []
+    #List of available tickers in standardized format
     self.availableTickers = []
+    #Dictionary containing standardized format tickers with a nested list of traded pairs on the exchange
     self.pairsByTicker = {}
 
   def getJson(self,url):
@@ -44,8 +47,10 @@ class Kraken(Exchange):
     """
     jsonResponse = self.getJson("https://api.kraken.com/0/public/Assets")
     availableTickers = []
-    for i in jsonResponse["result"]:
-      availableTickers.append(i)
+    for asset in jsonResponse["result"]:
+      if asset[0]=="X" or asset[0]=="Z":
+        asset = asset[1:]
+      availableTickers.append(asset)
     return availableTickers
 
   def orderPairs(self):
@@ -54,8 +59,6 @@ class Kraken(Exchange):
     """
     pairsByTickers = {}
     for asset in self.availableTickers:
-      if asset[0]=="X" or asset[0]=="Z":
-        asset = asset[1:]
       holder = []
       for pair in self.allPairs:
         if asset in pair:
