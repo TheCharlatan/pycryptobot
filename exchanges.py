@@ -1,12 +1,12 @@
 import json as json
 import requests as req
 
+
 class Kraken:
   def __init__(self):
     self.allPairs = self.getPairs()
-    self.allAssets = self.getTradedAssets()
-    self.pairsByAssets = self.orderPairs()
-    self.translateList = self.mapTicker()
+    self.availableTickers = self.getTradedTickers()
+    self.pairsByTicker = self.orderPairs()
 
   def getJson(self,url):
     """
@@ -26,55 +26,68 @@ class Kraken:
       allPairs.append(i.split(".d",1)[0])
     return allPairs
 
-  def getTradedAssets(self):
+  def getTradedTickers(self):
     """
-    Returns traded Assets on Kraken
+    Returns traded Tickers on Kraken
     """
     jsonResponse = self.getJson("https://api.kraken.com/0/public/Assets")
-    allAssets = []
+    availableTickers = []
     for i in jsonResponse["result"]:
-      allAssets.append(i)
-    return allAssets
+      availableTickers.append(i)
+    return availableTickers
 
   def orderPairs(self):
     """
     Order Pairs by Common Ticker into a dict
     """
-    pairsByAssets = {}
-    for asset in self.allAssets:
+    pairsByTickers = {}
+    for asset in self.availableTickers:
+      if asset[0]=="X" or asset[0]=="Z":
+        asset = asset[1:]
       holder = []
       for pair in self.allPairs:
         if asset in pair:
           holder.append(pair)
-        pairsByAssets[asset] = holder
-    return pairsByAssets
+      if asset == "XBT":
+        asset = "BTC"
+      pairsByTickers[asset] = holder
+    return pairsByTickers
 
-  def mapTicker(self):
-    """
-    Map general ticker names to Kraken generic names
-    """
-    translatedTicker={}
-    for name in self.allAssets:
-      print(name, name[1:])
-      if name[0]=="X" or name[0]=="Z":
-         translatedTicker[name] = name[1:]
-      else:
-        translatedTicker[name] = name
-    print(translatedTicker)      
+  def getTradedPair(self,primary,secondary):
+    for i in self.pairsByTicker[primary]:
+      for j in self.pairsByTicker[secondary]:
+        if i == j:
+          return i
 
-  def getCurrentPrice(self,ticker):
+  def getCurrentPrice(self,primary,secondary):
     """
     Gets the current price of a traded currency pair on Kraken
     """
+    pair = self.getTradedPair(primary,secondary)
     uri = "https://api.kraken.com/0/public/Ticker"
-    requestUrl = uri + "?pair=" + ticker
+    requestUrl = uri + "?pair=" + pair
     jsonResponse = self.getJson(requestUrl)
-    currentPrice = jsonResponse["result"][ticker]["c"]
+    currentPrice = jsonResponse["result"][pair]["c"]
     return currentPrice
 
 
 class Bitstamp:
-  currencyPairs = ["btcusd", "btceur", "eurusd", "xrpusd", "xrpeur", "xrpbtc", "ltcusd", "ltceur", "ltcbtc", "ethusd", "etheur", "ethbtc"]
+  def __init__(self):
+    self.allPairs = ["btcusd", "btceur", "eurusd", "xrpusd", "xrpeur", "xrpbtc", "ltcusd", "ltceur", "ltcbtc", "ethusd", "etheur", "ethbtc"]
+    self.availableTickers = self.formatTickers()
+    self.pairsByTicker = self.orderPairs()
+
+  def formatTickers(self):
+    """
+    Format ticker to uppercase and unique symbols for every traded asset
+    """
+    availableTickers = []
+    for pair in self.allPairs:
+      if not pair.upper()[0:3] in availableTickers:
+        availableTickers.append(pair.upper()[0:3])
+      if not pair.upper()[3:] in availableTickers:
+        availableTickers.append(pair.upper()[3:])
+    return availableTickers
 
   def getJson(self,url):
     """
@@ -84,15 +97,33 @@ class Bitstamp:
     jsonResponse = json.loads(r.text)
     return jsonResponse
 
-  def getCurrentPrice(self,ticker):
+  def orderPairs(self):
+    """
+    Order Pairs by Common Ticker into a dict
+    """
+    pairsByTickers = {}
+    for asset in self.availableTickers:
+      holder = []
+      for pair in self.allPairs:
+        if asset.lower()[0:3] in pair or asset.lower()[3:] in pair:
+          holder.append(pair)
+        pairsByTickers[asset] = holder
+    return pairsByTickers
+
+  def getTradedPair(self,primary,secondary):
+    for i in self.pairsByTicker[primary]:
+      for j in self.pairsByTicker[secondary]:
+        if i == j:
+          return i
+
+  def getCurrentPrice(self,primary,secondary):
     """
     Gets the current price of a traded currency pair on Kraken
     """
+    pair = self.getTradedPair(primary,secondary)
     uri = "https://www.bitstamp.net/api/v2/ticker/"
-    requestUrl = uri + ticker
+    requestUrl = uri + pair
     jsonResponse = self.getJson(requestUrl)
     currentPrice = jsonResponse["last"]
     return currentPrice
-
-
 
